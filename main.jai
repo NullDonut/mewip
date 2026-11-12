@@ -1,4 +1,7 @@
 #import "Basic";
+soclib :: #import "Socket";
+#import "Simple_Package";
+
 // #import "Command_Line";
 
 main :: () {
@@ -12,6 +15,23 @@ main :: () {
     }
 
     print("URL: % \n", args[1]);
+    ar: *soclib.addrinfo;
+    hints: soclib.addrinfo;
+    hints.ai_family = soclib.AF_INET;
+
+    status: int = soclib.getaddrinfo("google.com", "https", *hints, *ar);
+    if (status != 0) {
+        print("Error occured\n");
+        exit(34);
+    }
+
+    addr: *soclib.sockaddr_in = xx (ar.ai_addr);
+    ip: [soclib.INET_ADDRSTRLEN] u8;
+    soclib.inet_ntop(soclib.AF_INET, *addr.sin_addr, ip, size_of(ip));
+
+    ip_str: string = xx (ip);
+    print("IP: % \n", ip_str);
+
 
     // Command line parsing later on implement
     /**
