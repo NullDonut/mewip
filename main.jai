@@ -1,6 +1,6 @@
 #import "Basic";
 soclib :: #import "Socket";
-#import "Simple_Package";
+#import "String";
 
 // #import "Command_Line";
 
@@ -8,24 +8,39 @@ main :: () {
     args: = get_command_line_arguments();
     defer free(args.data);
 
-    print("% \n", args);
+    // print("% \n", args);
     if (args.count != 2) {
         print("Incorrect usage.\n");
         exit(67);
     }
+    https_header := slice(args[1], 0, 8);
+    if (https_header == "https://") {
+        print("Cannot use https:// prefix links use normal links like 'google.com'\n");
+        exit(67);
+    }
 
-    print("URL: % \n", args[1]);
-    ar: *soclib.addrinfo;
+    print("Url: % \n", args[1]);
+    result: *soclib.addrinfo;
     hints: soclib.addrinfo;
-    hints.ai_family = soclib.AF_INET;
 
-    status: int = soclib.getaddrinfo("google.com", "https", *hints, *ar);
-    if (status != 0) {
+    hints.ai_family = cast(s32) soclib.AF_INET;
+    hints.ai_socktype = .STREAM;
+    hints.ai_protocol = .TCP;
+
+    host := to_c_string(args[1]);
+    status := to_c_string("https");
+
+    defer free(host);
+    defer free(status);
+
+    ok: int = soclib.getaddrinfo(host, status, *hints, *result);
+    if (ok != 0) {
         print("Error occured\n");
         exit(34);
     }
+    defer soclib.freeaddrinfo(result);
 
-    addr: *soclib.sockaddr_in = xx (ar.ai_addr);
+    addr: *soclib.sockaddr_in = xx (result.ai_addr);
     ip: [soclib.INET_ADDRSTRLEN] u8;
     soclib.inet_ntop(soclib.AF_INET, *addr.sin_addr, ip, size_of(ip));
 
