@@ -13,10 +13,16 @@ main :: () {
         print("Incorrect usage.\n");
         exit(67);
     }
+
     https_header := slice(args[1], 0, 8);
+    http_header := slice(args[1], 0, 7);
     if (https_header == "https://") {
         print("Cannot use https:// prefix links use normal links like 'google.com'\n");
         exit(67);
+    }
+    if (http_header == "http://") {
+        print("Cannot use http:// prefix links use normal links like 'google.com'\n");
+        exit(68);
     }
 
     print("Url: % \n", args[1]);
@@ -27,7 +33,7 @@ main :: () {
     hints.ai_socktype = .STREAM;
     hints.ai_protocol = .TCP;
 
-    host := to_c_string(args[1]);
+    host := to_c_string(args[1]); // C_string is just adding null terminator at end.
     status := to_c_string("https");
 
     defer free(host);
