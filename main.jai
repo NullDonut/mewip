@@ -14,8 +14,8 @@ main :: () {
         exit(67);
     }
 
-    https_header := slice(args[1], 0, 8);
-    http_header := slice(args[1], 0, 7);
+    https_header := to_lower_copy(slice(args[1], 0, 8));
+    http_header := to_lower_copy(slice(args[1], 0, 7));
     if (https_header == "https://") {
         print("Cannot use https:// prefix links use normal links like 'google.com'\n");
         exit(67);
@@ -25,7 +25,7 @@ main :: () {
         exit(68);
     }
 
-    print("Url: % \n", args[1]);
+    print("URL: % \n", args[1]);
     result: *soclib.addrinfo;
     hints: soclib.addrinfo;
 
