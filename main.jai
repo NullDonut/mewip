@@ -41,7 +41,13 @@ main :: () {
 
     ok: int = soclib.getaddrinfo(host, status, *hints, *result);
     if (ok != 0) {
-        print("Error occured\n");
+        print("ERROR: ");
+        if ok == -2 print("URL unknown or not found.\n");
+        else if ok == -4 print("Permanent DNS failure.\n");
+        else if ok == -10 print("Out of memory.\n");
+        else if ok == -12 print("Overflow occured.\n");
+        else if ok == -5 print("Host exists but no address records.\n");
+        else print("Unknown % \n", ok);
         exit(34);
     }
     defer soclib.freeaddrinfo(result);
