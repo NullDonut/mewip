@@ -28,12 +28,17 @@ main :: () {
     https_header := to_lower_copy(slice(options.url, 0, 8));
     http_header := to_lower_copy(slice(options.url, 0, 7));
     if (https_header == "https://") {
-        print("Cannot use https:// prefix links use normal links like 'google.com'\n");
-        exit(67);
+        //  print("Cannot use https:// prefix links use normal links like 'google.com'\n");
+        options.url = to_lower_copy(slice(options.url, 8, options.url.count - 8));
+        // print("New Options URL: % \n", options.url);
+        // exit(67);
     }
     if (http_header == "http://") {
-        print("Cannot use http:// prefix links use normal links like 'google.com'\n");
-        exit(68);
+        //  print("Cannot use http:// prefix links use normal links like 'google.com'\n");
+        options.url = to_lower_copy(slice(options.url, 7, options.url.count - 7));
+        //     print("New Options URL: % \n", options.url);
+        //
+        //     exit(68);
     }
 
     print("URL: % \n", options.url);
