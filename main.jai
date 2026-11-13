@@ -5,12 +5,28 @@ soclib :: #import "Socket";
 #import "Command_Line";
 
 main :: () {
+    ping_logger :: (message: string, data: *void, info: Log_Info) {
+        if info.common_flags & .ERROR {
+            write_string("ERROR: ", to_standard_error = true);
+            write_string(message, to_standard_error = true);
+            if message[message.count - 1] != #char "\n"
+                write_string("\n", to_standard_error = true);
+            return;
+        }
+
+        if context.log_level == .NORMAL && (info.common_flags & .VERBOSE_ONLY) return;
+
+        write_string(message);
+        if message[message.count - 1] != #char "\n" write_string("\n");
+    }
+
+    context.logger = ping_logger;
     args: = get_command_line_arguments();
     defer free(args.data);
 
-    // print("% \n", args);
+    // log("% \n", args);
     if (args.count < 2) {
-        print("Incorrect usage.\n");
+        log("Incorrect usage.\n", flags = .ERROR);
         exit(67);
     }
     Options :: struct {
@@ -23,28 +39,28 @@ main :: () {
         return;
     }
     if options.url.count == 0 || options.url == "null" {
-        print("Url not given\n\n");
+        log("Url not given\n\n");
         show_help(Options, Default_Argument_Flags, .["help"]);
         return;
     }
-    // print("% \n", options);
+    // log("% \n", options);
     https_header := to_lower_copy(slice(options.url, 0, 8));
     http_header := to_lower_copy(slice(options.url, 0, 7));
     if (https_header == "https://") {
-        //  print("Cannot use https:// prefix links use normal links like 'google.com'\n");
+        //  log("Cannot use https:// prefix links use normal links like 'google.com'\n");
         options.url = to_lower_copy(slice(options.url, 8, options.url.count - 8));
-        // print("New Options URL: % \n", options.url);
+        // log("New Options URL: % \n", options.url);
         // exit(67);
     }
     if (http_header == "http://") {
-        //  print("Cannot use http:// prefix links use normal links like 'google.com'\n");
+        //  log("Cannot use http:// prefix links use normal links like 'google.com'\n");
         options.url = to_lower_copy(slice(options.url, 7, options.url.count - 7));
-        //     print("New Options URL: % \n", options.url);
+        //     log("New Options URL: % \n", options.url);
         //
         //     exit(68);
     }
 
-    print("URL: % \n", options.url);
+    log("URL: % \n", options.url);
     result: *soclib.addrinfo;
     hints: soclib.addrinfo;
 
@@ -60,13 +76,12 @@ main :: () {
 
     ok: int = soclib.getaddrinfo(host, status, *hints, *result);
     if (ok != 0) {
-        print("ERROR: ");
-        if ok == -2 print("URL unknown or not found.\n");
-        else if ok == -4 print("Permanent DNS failure.\n");
-        else if ok == -10 print("Out of memory.\n");
-        else if ok == -12 print("Overflow occured.\n");
-        else if ok == -5 print("Host exists but no address records.\n");
-        else print("Unknown % \n", ok);
+        if ok == -2 log("URL unknown or not found.\n", flags = .ERROR);
+        else if ok == -4 log("Permanent DNS failure.\n", flags = .ERROR);
+        else if ok == -10 log("Out of memory.\n", flags = .ERROR);
+        else if ok == -12 log("Overflow occured.\n", flags = .ERROR);
+        else if ok == -5 log("Host exists but no address records.\n", flags = .ERROR);
+        else log("Unknown % \n", ok, flags = .ERROR);
         exit(34);
     }
     defer soclib.freeaddrinfo(result);
@@ -76,25 +91,25 @@ main :: () {
     soclib.inet_ntop(soclib.AF_INET, *addr.sin_addr, ip, size_of(ip));
 
     ip_str: string = xx (ip);
-    print("IP: % \n", ip_str);
+    log("IP: % \n", ip_str);
 
     // // ICMP req
     // sock: s32 = soclib.socket(soclib.AF_INET, .SOCK_DGRAM, .IPPROTO_ICMP);
     // if (sock == -1) {
-    //     print("Socket creation failed: % \n", errno());
+    //     log("Socket creation failed: % \n", errno());
     //     return;
     // }
     // defer close(sock);
     //
     // icmp_addr: soclib.sockaddr_in;
     // icmp_addr.sin_family = soclib.AF_INET;
-    // print("Socket created sucessfully\n");
+    // log("Socket created sucessfully\n");
     // ok = soclib.inet_pton(soclib.AF_INET, ip, *icmp_addr.sin_addr);
     // if (ok != 1) {
-    //     print("Error occured.\n");
+    //     log("Error occured.\n");
     //     return;
     // }
-    // print("Ok: % \n", ok);
+    // log("Ok: % \n", ok);
     //
     // Icmp_Header :: struct {
     //     type: u8;
@@ -124,5 +139,4 @@ main :: () {
     //
     //
     // Command line parsing later on implement
-
 }
