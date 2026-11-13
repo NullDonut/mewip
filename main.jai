@@ -3,6 +3,8 @@ soclib :: #import "Socket";
 #import "String";
 
 #import "Command_Line";
+#import "Extensions/Http";
+#import "Extensions/Json";
 
 main :: () {
     ping_logger :: (message: string, data: *void, info: Log_Info) {
@@ -39,7 +41,7 @@ main :: () {
         return;
     }
     if options.url.count == 0 || options.url == "null" {
-        log("Url not given\n\n");
+        log("Url not given\n\n", flags = .ERROR);
         show_help(Options, Default_Argument_Flags, .["help"]);
         return;
     }
@@ -90,53 +92,43 @@ main :: () {
     ip: [soclib.INET_ADDRSTRLEN] u8;
     soclib.inet_ntop(soclib.AF_INET, *addr.sin_addr, ip, size_of(ip));
 
-    ip_str: string = xx (ip);
+    ip_str: string = to_string((ip.data));
     log("IP: % \n", ip_str);
 
-    // // ICMP req
-    // sock: s32 = soclib.socket(soclib.AF_INET, .SOCK_DGRAM, .IPPROTO_ICMP);
-    // if (sock == -1) {
-    //     log("Socket creation failed: % \n", errno());
-    //     return;
-    // }
-    // defer close(sock);
-    //
-    // icmp_addr: soclib.sockaddr_in;
-    // icmp_addr.sin_family = soclib.AF_INET;
-    // log("Socket created sucessfully\n");
-    // ok = soclib.inet_pton(soclib.AF_INET, ip, *icmp_addr.sin_addr);
-    // if (ok != 1) {
-    //     log("Error occured.\n");
-    //     return;
-    // }
-    // log("Ok: % \n", ok);
-    //
-    // Icmp_Header :: struct {
-    //     type: u8;
-    //     code: u8;
-    //     checksum: u16;
-    //     identifier: u16;
-    //     sequence: u16;
-    // }
-    // #assert size_of(Icmp_Header) == 8;
-    //
-    // swap16 :: (x: u16) -> u16 {
-    //     return (x << 8) | (x >> 8);
-    // }
-    //
-    // checksum :: (data: *u8, len: int) -> u16 {
-    //     sum: u32 = 0;
-    //     i := 0;
-    //     while i + 1 < len {
-    //         sum += ((cast(u32) data[i]) << 8) | cast(u32) data[i + 1];
-    //         i += 2;
-    //     }
-    //     if len % 2 == 1 sum += (cast(u32) data[len - 1]) << 8;
-    //
-    //     while (sum >> 16) != 0 sum = (sum & 0xFFFF) + (sum >> 16);
-    //     return cast(u16) ~sum;
-    // }
-    //
-    //
-    // Command line parsing later on implement
+    Ip :: struct {
+        query: string;
+        status: string;
+        country: string;
+        countryCode: string;
+        region: string;
+        city: string;
+        zip: string;
+        lat: float;
+        lon: float;
+        timezone: string;
+        isp: string;
+        org: string;
+        as: string;
+    }
+
+    api: Client;
+    api.base_url = tprint("http://ip-api.com/json/%", ip_str);
+
+    response, error := get(*api, "");
+    if error.kind != .NONE {
+        log("%", error_text(error), flags = .ERROR);
+        return;
+    }
+    defer close(*response);
+
+    if response.status != 200 return;
+    ip_addr, error2 := read_json(*response, Ip);
+    defer free_json(*ip_addr);
+    if error2.kind != .NONE {
+        print("the answer was not a note: %\n", error_text(error2));
+        return;
+    }
+
+    log("% \n", ip_addr);
+
 }
