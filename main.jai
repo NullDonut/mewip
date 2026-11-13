@@ -2,20 +2,31 @@
 soclib :: #import "Socket";
 #import "String";
 
-// #import "Command_Line";
+#import "Command_Line";
 
 main :: () {
     args: = get_command_line_arguments();
     defer free(args.data);
 
     // print("% \n", args);
-    if (args.count != 2) {
+    if (args.count < 2) {
         print("Incorrect usage.\n");
         exit(67);
     }
-
-    https_header := to_lower_copy(slice(args[1], 0, 8));
-    http_header := to_lower_copy(slice(args[1], 0, 7));
+    Options :: struct {
+        quiet: bool = false; @"Print only the IP address."
+        url: string = "null"; @"Host name or IP to resolve."
+    }
+    oke, options := parse_arguments(Options, args = args);
+    if !oke return;
+    if options.url.count == 0 || options.url == "null" {
+        print("Url not given\n\n");
+        show_help(Options, Default_Argument_Flags, .["help"]);
+        return;
+    }
+    print("% \n", options);
+    https_header := to_lower_copy(slice(options.url, 0, 8));
+    http_header := to_lower_copy(slice(options.url, 0, 7));
     if (https_header == "https://") {
         print("Cannot use https:// prefix links use normal links like 'google.com'\n");
         exit(67);
@@ -25,7 +36,7 @@ main :: () {
         exit(68);
     }
 
-    print("URL: % \n", args[1]);
+    print("URL: % \n", options.url);
     result: *soclib.addrinfo;
     hints: soclib.addrinfo;
 
@@ -33,7 +44,7 @@ main :: () {
     hints.ai_socktype = .STREAM;
     hints.ai_protocol = .TCP;
 
-    host := to_c_string(args[1]); // C_string is just adding null terminator at end.
+    host := to_c_string(options.url); // C_string is just adding null terminator at end.
     status := to_c_string("https");
 
     defer free(host);
@@ -105,15 +116,5 @@ main :: () {
     //
     //
     // Command line parsing later on implement
-    /**
-        Options :: struct {
-            quite: bool = false;
-            level := 2;
-            url: string = "null";
-        }
-    **/
-    /**
-    ok, options := parse_arguments(Options, args = args);
-    assert(ok);
-    print("% \n", options); **/
+
 }
