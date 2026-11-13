@@ -18,13 +18,16 @@ main :: () {
         url: string = "null"; @"Host name or IP to resolve."
     }
     oke, options := parse_arguments(Options, args = args);
-    if !oke return;
+    if !oke {
+        show_help(Options, Default_Argument_Flags, .["help"]);
+        return;
+    }
     if options.url.count == 0 || options.url == "null" {
         print("Url not given\n\n");
         show_help(Options, Default_Argument_Flags, .["help"]);
         return;
     }
-    print("% \n", options);
+    // print("% \n", options);
     https_header := to_lower_copy(slice(options.url, 0, 8));
     http_header := to_lower_copy(slice(options.url, 0, 7));
     if (https_header == "https://") {
