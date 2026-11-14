@@ -5,6 +5,8 @@ soclib :: #import "Socket";
 #import "Command_Line";
 #import "Extensions/Http";
 #import "Extensions/Json";
+#import "Print_Color";
+
 
 main :: () {
     ping_logger :: (message: string, data: *void, info: Log_Info) {
@@ -22,22 +24,23 @@ main :: () {
         if message[message.count - 1] != #char "\n" write_string("\n");
     }
 
+
     context.logger = ping_logger;
     args: = get_command_line_arguments();
     defer free(args.data);
 
-    // log("% \n", args);
-    if (args.count < 2) {
-        log("Incorrect usage.\n", flags = .ERROR);
-        exit(67);
-    }
     Options :: struct {
         quiet: bool = false; @"Print only the IP address."
         url: string = "null"; @"Host name or IP to resolve."
     }
+    // log("% \n", args);
+    if (args.count < 2) {
+        log("Incorrect usage.\n", flags = .ERROR);
+        show_help(Options, Default_Argument_Flags, .["help"]);
+        return;
+    }
     oke, options := parse_arguments(Options, args = args);
     if !oke {
-        show_help(Options, Default_Argument_Flags, .["help"]);
         return;
     }
     if options.url.count == 0 || options.url == "null" {
@@ -62,7 +65,7 @@ main :: () {
         //     exit(68);
     }
 
-    log("URL: % \n", options.url);
+    log("URL: % \n", options.url, flags = .VERBOSE_ONLY);
     result: *soclib.addrinfo;
     hints: soclib.addrinfo;
 
@@ -93,7 +96,7 @@ main :: () {
     soclib.inet_ntop(soclib.AF_INET, *addr.sin_addr, ip, size_of(ip));
 
     ip_str: string = to_string((ip.data));
-    log("IP: % \n", ip_str);
+    log("IP: % \n", ip_str, flags = .VERBOSE_ONLY);
 
     Ip :: struct {
         query: string;
@@ -129,6 +132,31 @@ main :: () {
         return;
     }
 
-    log("% \n", ip_addr);
+    // log("% \n", ip_addr);
 
+    // Todo: Error handling and better printing ui;
+
+    // Better printing ui;
+    row :: (label: string, value: string) {
+        print_color("%", label, color = .WHITE, style = .BOLD);
+        for 1..(20 - label.count) print(" ");
+        print("%\n", value);
+    }
+
+    show_info :: (ip: Ip, host: string) {
+        print("\n\t    \e[1m%\e[0m\n", host);
+        print("-----------------------------------\n");
+        row("IP", ip.query);
+        row("Country", ip.country);
+        row("Country Code", ip.countryCode);
+        row("Region", ip.region);
+        row("City", ip.city);
+        row("Zip", ip.zip);
+        row("Timezone", ip.timezone);
+        row("ISP", ip.isp);
+        row("Organisation", ip.org);
+        row("AS", ip.as);
+    }
+
+    show_info(ip_addr, options.url);
 }
