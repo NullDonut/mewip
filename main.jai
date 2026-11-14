@@ -97,6 +97,10 @@ main :: () {
 
     ip_str: string = to_string((ip.data));
     log("IP: % \n", ip_str, flags = .VERBOSE_ONLY);
+    if(options.quiet){
+        print("% \n",ip_str);
+        return;
+    }
 
     Ip :: struct {
         query: string;
