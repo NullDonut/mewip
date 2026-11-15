@@ -134,14 +134,17 @@ main :: () {
     }
     defer close(*response);
 
-    if response.status != 200 return;
-    ip_addr, error2 := read_json(*response, Ip);
-    defer free_json(*ip_addr);
-    if error2.kind != .NONE {
-        print("the answer was not a note: %\n", error_text(error2));
+    if response.status != 200 {
+        log("Lookup service returned status %.\n", response.status, flags = .ERROR);
         return;
     }
-
+    ip_addr, error2 := read_json(*response, Ip);
+    if error2.kind != .NONE {
+        print("% \n", response);
+        log("JSON parsing failed: %\n", error_text(error2), flags = .ERROR);
+        return;
+    }
+    defer free_json(*ip_addr);
     // log("% \n", ip_addr);
 
     // Todo: Error handling and better printing ui;
@@ -167,7 +170,10 @@ main :: () {
         row("Organisation", ip.org);
         row("AS", ip.as);
     }
-
+    if ip_addr.status != "success" {
+        log("Lookup failed: %\n", ip_addr, flags = .ERROR);
+        return;
+    }
     show_info(ip_addr, options.url);
 }
 
