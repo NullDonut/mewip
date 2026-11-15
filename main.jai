@@ -41,6 +41,10 @@ main :: () {
     }
     oke, options := parse_arguments(Options, args = args);
     if !oke {
+        if !asked_for_help(args) {
+            log("Invalid arguments.\n", flags = .ERROR);
+            show_help(Options, Default_Argument_Flags, .["help"]);
+        }
         return;
     }
     if options.url.count == 0 || options.url == "null" {
@@ -182,4 +186,11 @@ extract_host :: (input: string) -> string {
         i += 1;
     }
     return s;
+}
+
+asked_for_help :: (args: [] string) -> bool {
+    for i: 1..args.count - 1 {
+        if args[i] == "-help" || args[i] == "-HELP" || args[i] == "-?" return true;
+    }
+    return false;
 }
