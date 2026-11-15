@@ -48,23 +48,25 @@ main :: () {
         show_help(Options, Default_Argument_Flags, .["help"]);
         return;
     }
-    // log("% \n", options);
-    https_header := to_lower_copy(slice(options.url, 0, 8));
-    http_header := to_lower_copy(slice(options.url, 0, 7));
-    if (https_header == "https://") {
-        //  log("Cannot use https:// prefix links use normal links like 'google.com'\n");
-        options.url = to_lower_copy(slice(options.url, 8, options.url.count - 8));
-        // log("New Options URL: % \n", options.url);
-        // exit(67);
-    }
-    if (http_header == "http://") {
-        //  log("Cannot use http:// prefix links use normal links like 'google.com'\n");
-        options.url = to_lower_copy(slice(options.url, 7, options.url.count - 7));
-        //     log("New Options URL: % \n", options.url);
-        //
-        //     exit(68);
-    }
+    // // log("% \n", options);
+    // https_header := to_lower_copy(slice(options.url, 0, 8));
+    // http_header := to_lower_copy(slice(options.url, 0, 7));
+    // if (https_header == "https://") {
+    //     //  log("Cannot use https:// prefix links use normal links like 'google.com'\n");
+    //     options.url = to_lower_copy(slice(options.url, 8, options.url.count - 8));
+    //     // log("New Options URL: % \n", options.url);
+    //     // exit(67);
+    // }
+    // if (http_header == "http://") {
+    //     //  log("Cannot use http:// prefix links use normal links like 'google.com'\n");
+    //     options.url = to_lower_copy(slice(options.url, 7, options.url.count - 7));
+    //     //     log("New Options URL: % \n", options.url);
+    //     //
+    //     //     exit(68);
+    // }
+    //
 
+    options.url = to_lower_copy(extract_host(options.url));
     log("URL: % \n", options.url, flags = .VERBOSE_ONLY);
     result: *soclib.addrinfo;
     hints: soclib.addrinfo;
@@ -97,8 +99,8 @@ main :: () {
 
     ip_str: string = to_string((ip.data));
     log("IP: % \n", ip_str, flags = .VERBOSE_ONLY);
-    if(options.quiet){
-        print("% \n",ip_str);
+    if (options.quiet) {
+        print("% \n", ip_str);
         return;
     }
 
@@ -163,4 +165,21 @@ main :: () {
     }
 
     show_info(ip_addr, options.url);
+}
+
+extract_host :: (input: string) -> string {
+    s := input;
+    if begins_with_nocase(s, "https://") s = advance(s, 8);
+    else if begins_with_nocase(s, "http://") s = advance(s, 7);
+
+    i := 0;
+    while i < s.count {
+        c := s[i];
+        if c == #char "/" || c == #char "?" || c == #char ":" || c == #char "#" {
+            s.count = i;
+            break;
+        }
+        i += 1;
+    }
+    return s;
 }
