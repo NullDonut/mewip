@@ -1,0 +1,2 @@
+53adff9c89cb9e024ca6a694896dda73e3b88d8d2a956256298a36f242ebe6e4  mewip-v0.1.0-linux-arm64
+3dda7e738a09c77171c370aa33c6f8a4cbeb4abcae51efaa0d9d2a48a89d6854  mewip-v0.1.0-linux-x64
