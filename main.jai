@@ -108,6 +108,12 @@ main :: () {
         return;
     }
 
+    octets := cast(*u8) *addr.sin_addr;
+    if is_private_ip(octets) {
+        log("% is a private or reserved address,so there is no location data.\n", ip_str, flags = .ERROR);
+        return;
+    }
+
     Ip :: struct {
         query: string;
         status: string;
@@ -140,7 +146,6 @@ main :: () {
     }
     ip_addr, error2 := read_json(*response, Ip);
     if error2.kind != .NONE {
-        print("% \n", response);
         log("JSON parsing failed: %\n", error_text(error2), flags = .ERROR);
         return;
     }
@@ -198,5 +203,13 @@ asked_for_help :: (args: [] string) -> bool {
     for i: 1..args.count - 1 {
         if args[i] == "-help" || args[i] == "-HELP" || args[i] == "-?" return true;
     }
+    return false;
+}
+
+is_private_ip :: (b: *u8) -> bool {
+    if b[0] == 0 || b[0] == 10 || b[0] == 127 return true;
+    if b[0] == 192 && b[1] == 168 return true;
+    if b[0] == 172 && b[1] >= 16 && b[1] <= 31 return true;
+    if b[0] == 169 && b[1] == 254 return true;
     return false;
 }
